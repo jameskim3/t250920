@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "aruco_test": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\install"
+    }
+  }
+}

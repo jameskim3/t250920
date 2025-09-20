@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="WpfApp2.Page3"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wfi="clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
+             xmlns:cogx="clr-namespace:Cognex.VisionPro.Display;assembly=Cognex.VisionPro.Display">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <!-- 좌: 파일 리스트 -->
+            <ColumnDefinition Width="*"/>
+            <!-- 우: CogDisplay -->
+            <ColumnDefinition Width="400"/>
+            <!-- 우: ToolBlock 편집기 -->
+        </Grid.ColumnDefinitions>
+
+        <!-- 좌측: 파일 리스트 -->
+        <ListBox x:Name="FileList" Grid.Column="0" SelectionChanged="FileList_SelectionChanged" Margin="5"/>
+
+        <!-- 중앙: CogDisplay -->
+        <wfi:WindowsFormsHost Grid.Column="1" x:Name="WinFormsHostDisplay"/>
+
+        <!-- 우측: CogToolBlockEditV2 -->
+        <wfi:WindowsFormsHost Grid.Column="2" x:Name="WinFormsHostToolbox"/>
+    </Grid>
+</UserControl>

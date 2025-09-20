@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<!-- 🔴 추가 -->
+		<PlatformTarget>x64</PlatformTarget>
+		<BaseOutputPath>C:\install\WpfApp2</BaseOutputPath>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Cognex.VisionPro">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.Core">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.Display.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.Display.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageFile">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.ImageFile.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageFile.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.ImageFile.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageProcessing">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.ImageProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageProcessing.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\ref\Cognex.VisionPro.ImageProcessing.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\bin\Cognex.VisionPro.PMAlign.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\bin\Cognex.VisionPro.PMAlign.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ToolGroup">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\bin\Cognex.VisionPro.ToolGroup.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ToolGroup.Controls">
+      <HintPath>..\..\..\..\..\..\Program Files\Cognex\VisionPro 25.1.0\bin\Cognex.VisionPro.ToolGroup.Controls.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

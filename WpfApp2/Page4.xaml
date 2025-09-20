@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="WpfApp2.Page4"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="이미지 증강 (0~5도, 0.1 간격 회전)"
+                       FontSize="16"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,10"/>
+            <Button Content="변환 실행"
+                    Width="200" Height="50"
+                    Click="AugmentAndSave_Click"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
