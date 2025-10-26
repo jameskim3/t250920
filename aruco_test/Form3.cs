@@ -5,19 +5,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Size = OpenCvSharp.Size;
 using Point = OpenCvSharp.Point;
+using Size = OpenCvSharp.Size;
 
 namespace aruco_test
 {
 
     using cvsize = OpenCvSharp.Size;
-    using dsize = System.Drawing.Size;
     using dpoint = System.Drawing.Point;
+    using dsize = System.Drawing.Size;
 
     public partial class Form3 : Form
     {
@@ -41,7 +44,7 @@ namespace aruco_test
                 MessageBox.Show("캘리브레이션 성공!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             else
                 MessageBox.Show("캘리브레이션 실패!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            
+
             MessageBox.Show("캘리브레이션 완료");
 
             // 오버레이 표시용
@@ -135,8 +138,8 @@ namespace aruco_test
 
         private void button5_Click(object sender, EventArgs e)
         {
-            generator.GenerateAndSaveOne(); 
-        }  
+            generator.GenerateAndSaveOne();
+        }
 
         private void button6_Click(object sender, EventArgs e)
         {
@@ -181,6 +184,165 @@ namespace aruco_test
 
             MessageBox.Show("오버레이 완료");
         }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string inputPath = @"C:\img\origin.bmp";
+            string outputDir = @"C:\img\output";
+
+            if (!Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            using Bitmap originalSrc = new Bitmap(inputPath);
+            using Bitmap original = Ensure24bpp(originalSrc); // 변환 작업용 24bpp 보정
+
+            double[] xOffsets = GenerateRange(-100, 100, 5); // -100,-60,-20,20,60,100
+            double[] yOffsets = GenerateRange(-100, 100, 5);
+            double[] angles = GenerateRange(-10, 10, 5); // -10,-6,-2,2,6,10
+
+            foreach (double x in xOffsets)
+            {
+                foreach (double y in yOffsets)
+                {
+                    foreach (double t in angles)
+                    {
+                        using Bitmap transformed = TransformImage24bpp(original, (float)x, (float)y, (float)t);
+
+                        // 저장 직전 8bpp 그레이스케일로 변환(unsafe 없이)
+                        using Bitmap gray8 = ConvertTo8bppGrayscale_NoUnsafe(transformed);
+
+                        string filename = $"img_x{x:+0;-0}_y{y:+0;-0}_t{t:+0;-0}_8bpp.bmp";
+                        gray8.Save(Path.Combine(outputDir, filename), ImageFormat.Bmp);
+                    }
+                }
+            }
+        }
+        static double[] GenerateRange(double min, double max, int steps)
+        {
+            double[] result = new double[steps + 1];
+            for (int i = 0; i <= steps; i++)
+                result[i] = Math.Round(min + (max - min) * i / steps, 2);
+            return result;
+        }
+
+        static Bitmap Ensure24bpp(Bitmap src)
+        {
+            if (src.PixelFormat == PixelFormat.Format24bppRgb)
+                return (Bitmap)src.Clone();
+
+            Bitmap dst = new Bitmap(src.Width, src.Height, PixelFormat.Format24bppRgb);
+            dst.SetResolution(src.HorizontalResolution, src.VerticalResolution);
+            using (Graphics g = Graphics.FromImage(dst))
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.DrawImage(src, 0, 0, src.Width, src.Height);
+            }
+            return dst;
+        }
+
+        static Bitmap TransformImage24bpp(Bitmap src24, float offsetX, float offsetY, float angleDeg)
+        {
+            Bitmap dest = new Bitmap(src24.Width, src24.Height, PixelFormat.Format24bppRgb);
+            dest.SetResolution(src24.HorizontalResolution, src24.VerticalResolution);
+
+            using (Graphics g = Graphics.FromImage(dest))
+            {
+                g.Clear(Color.Black); // 배경색 필요 시 변경
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                g.TranslateTransform(src24.Width / 2f + offsetX, src24.Height / 2f + offsetY);
+                g.RotateTransform(angleDeg);
+                g.TranslateTransform(-src24.Width / 2f, -src24.Height / 2f);
+
+                g.DrawImage(src24, new System.Drawing.Point(0, 0));
+            }
+            return dest;
+        }
+
+        /// <summary>
+        /// unsafe 없이 24bpp → 8bpp 그레이스케일 변환
+        /// </summary>
+        static Bitmap ConvertTo8bppGrayscale_NoUnsafe(Bitmap color)
+        {
+            // 입력은 24bpp 가정. 아니라면 24bpp로 보정
+            Bitmap src = color.PixelFormat == PixelFormat.Format24bppRgb
+                ? color
+                : Ensure24bpp(color);
+
+            int w = src.Width;
+            int h = src.Height;
+
+            // 목적지 8bpp 인덱스 비트맵 생성
+            Bitmap gray = new Bitmap(w, h, PixelFormat.Format8bppIndexed);
+            gray.SetResolution(src.HorizontalResolution, src.VerticalResolution);
+
+            // 회색 팔레트 구성
+            ColorPalette pal = gray.Palette;
+            for (int i = 0; i < 256; i++) pal.Entries[i] = Color.FromArgb(i, i, i);
+            gray.Palette = pal;
+
+            // LockBits
+            BitmapData srcData = null!;
+            BitmapData dstData = null!;
+            byte[] srcBuf = null!;
+            byte[] dstBuf = null!;
+
+            try
+            {
+                srcData = src.LockBits(new Rectangle(0, 0, w, h),
+                                       ImageLockMode.ReadOnly,
+                                       PixelFormat.Format24bppRgb);
+                dstData = gray.LockBits(new Rectangle(0, 0, w, h),
+                                        ImageLockMode.WriteOnly,
+                                        PixelFormat.Format8bppIndexed);
+
+                int srcStride = srcData.Stride;     // 24bpp: 3바이트/픽셀 + 라인 패딩
+                int dstStride = dstData.Stride;     // 8bpp: 1바이트/픽셀 + 라인 패딩
+
+                int srcBytes = Math.Abs(srcStride) * h;
+                int dstBytes = Math.Abs(dstStride) * h;
+
+                srcBuf = new byte[srcBytes];
+                dstBuf = new byte[dstBytes];
+
+                Marshal.Copy(srcData.Scan0, srcBuf, 0, srcBytes);
+
+                // 라인별 순회 (stride를 사용해 패딩 안전 처리)
+                for (int y = 0; y < h; y++)
+                {
+                    int srcRow = y * srcStride;
+                    int dstRow = y * dstStride;
+
+                    for (int x = 0; x < w; x++)
+                    {
+                        int s = srcRow + x * 3; // BGR
+                        byte b = srcBuf[s + 0];
+                        byte g = srcBuf[s + 1];
+                        byte r = srcBuf[s + 2];
+
+                        // BT.601 (0.299 R + 0.587 G + 0.114 B)
+                        int lum = (int)(0.299 * r + 0.587 * g + 0.114 * b + 0.5);
+                        if (lum < 0) lum = 0;
+                        if (lum > 255) lum = 255;
+
+                        dstBuf[dstRow + x] = (byte)lum;
+                    }
+                }
+
+                Marshal.Copy(dstBuf, 0, dstData.Scan0, dstBytes);
+            }
+            finally
+            {
+                if (srcData != null) src.UnlockBits(srcData);
+                if (dstData != null) gray.UnlockBits(dstData);
+                if (!ReferenceEquals(src, color)) src.Dispose();
+            }
+
+            return gray;
+        }
     }
 }
-
